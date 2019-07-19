@@ -1,0 +1,151 @@
+<html>
+<head>
+    <title>ASP.NET MVC and HTML5 history API | The realm of code</title>
+	<meta charset="UTF-8">
+	<meta name="description" content="Personal blog about coding and web technologies - Zeljko Minic">
+	<meta name="keywords" content="blog, coding, development, web, technology, IT, ASP.NET, MVC, HTML5, History API">
+	<meta name="author" content="Zeljko Minic">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="DocPad v6.79.4" />
+	<link href='http://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
+    <link  rel="stylesheet" href="/styles/bootstrap.min.css" /><link  rel="stylesheet" href="/styles/bootstrap-theme.min.css" /><link  rel="stylesheet" href="/styles/prism.css" /><link  rel="stylesheet" href="/styles/style.css" />
+</head>
+<body>
+
+	<div class="col-md-2 col-xs-0"></div>
+	<div class="col-md-8 col-xs-12">
+
+		<nav class="navbar navbar-default">
+		<div class="container-fluid">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="/index.html">
+				<span>&lt;</span>
+				<span>
+					the<strong>realm</strong>of<strong>code</strong>
+				</span>
+				<span>/&gt;</span>
+			</a>
+			</div>
+
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">	
+				
+					<li class="">
+						<a href="/index.html">
+							Home
+						</a>
+					</li>
+				
+					<li class="">
+						<a href="/about.html">
+							About
+						</a>
+					</li>
+				
+					<li class="">
+						<a href="/archive.html">
+							Archive
+						</a>
+					</li>
+				
+			</ul>
+
+			<ul class="nav navbar-nav navbar-right">
+				<li>
+					<a href="https://twitter.com/zeljko_minic" target="_blank" title="Twitter">
+						<img src="/images/twitter.png" />
+					</a>
+				</li>
+				<li>
+					<a href="http://rs.linkedin.com/in/zminic" target="_blank" title="LinkedIn">
+						<img src="/images/linkedin.png" />
+					</a>
+				</li>
+			</ul>
+			</div><!-- /.navbar-collapse -->
+		</div><!-- /.container-fluid -->
+		</nav>
+
+
+		<div class="content">
+			<div class="post">
+
+	<div class="title">
+		<h1>ASP.NET MVC and HTML5 history API</h1>
+	</div>
+	
+	<div class="body">
+		<p><img class="img-responsive" src="/images/posts/html5-history.png" title="Html5 history" align="left" /></p>
+<p>One way to implement client side navigation in single page apps would be to use HTML5 history API. With this API it is possible to change browser URL without full page reload and also to respond to browser navigation buttons (back and forward).</p>
+<p>In this article I&#39;m going to explain how to configure ASP.NET MVC routes to play nice with HTML5 history API.</p>
+<p>In my scenario I had a single page app with sections for anonymous and authenticated users. In my navigation mechanism I separated this sections in following way: anonymous users pages have links in format {app root}/anonymous/page1/subpage1, and authenticated users in format {app root}/user/page1/subpage1. This basically means that pages are namespaced (or organized in folders) based on information if user is authenticated or not.</p>
+<p>Since in ASP.NET MVC app, default route is in following format {controller}/{action}/{id}, requests to my pages would be routed to anonymous and user controllers. And what I want is to route anonymous/* links to Home/Login (home controller and login action) and user/* to Home/Index since this controllers and actions are responsible for application bootstrapping.</p>
+<p>To do this I needed to change default route to &quot;pass through&quot; URL if it starts with anonymous or user string, and to define separate routes for this case. This can be achieved with route constraints.</p>
+<p>This is my route configuration:</p>
+<pre><code class="lang-csharp">routes.MapRoute(
+    name: &quot;Default&quot;,
+    url: &quot;{controller}/{action}/{id}&quot;,
+    defaults: new { controller = &quot;Home&quot;, action = &quot;Index&quot;, id = UrlParameter.Optional },
+    constraints: new { controller = new HtmlHistoryRouteConstraint() }
+);
+
+routes.MapRoute(
+    name: &quot;ClientUrlAuthenticated&quot;,
+    url: &quot;user/{*url}&quot;,
+    defaults: new { controller = &quot;Home&quot;, action = &quot;Index&quot; }
+);
+
+routes.MapRoute(
+    name: &quot;ClientUrlAnonymous&quot;,
+    url: &quot;anonymous/{*url}&quot;,
+    defaults: new { controller = &quot;Home&quot;, action = &quot;Login&quot; }
+);
+</code></pre>
+<p>First route is modified default route with special constraint for controller. This constraint is a class that implements <em>IRouteConstraint</em> interface and there I have logic which disables this route if it encounters anonymous and user strings.</p>
+<pre><code class="lang-csharp">public class HtmlHistoryRouteConstraint: IRouteConstraint
+{
+    public bool Match(HttpContextBase httpContext, Route route, 
+        string parameterName, 
+        RouteValueDictionary values,
+        RouteDirection routeDirection)
+    {
+        return !values[parameterName].Equals(&quot;anonymous&quot;) &amp;&amp; 
+            !values[parameterName].Equals(&quot;user&quot;);
+    }
+}
+</code></pre>
+<p>The other two routes configure router to go to specified controller and action if it encounters URLs that start with anonymous and user strings.</p>
+
+	</div>
+	
+	<div class="comments">
+		<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+			var disqus_shortname = 'therealmofcode'; // required: replace example with your forum shortname
+
+			/* * * DON'T EDIT BELOW THIS LINE * * */
+			(function() {
+				var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+				dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+				(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+			})();
+		</script>
+	</div>
+	
+</div>
+		</div>
+	</div>
+	<div class="col-md-2 col-xs-0"></div>
+	
+    <script defer="defer"  src="/scripts/jquery.min.js"></script><script defer="defer"  src="/scripts/bootstrap.min.js"></script><script defer="defer"  src="/scripts/prism.js"></script><script defer="defer"  src="/scripts/google-analytics.js"></script>
+</body>
+</html>
