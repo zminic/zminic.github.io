@@ -1,0 +1,225 @@
+<html>
+<head>
+    <title>Adding CORS support to WCF | The realm of code</title>
+	<meta charset="UTF-8">
+	<meta name="description" content="Personal blog about coding and web technologies - Zeljko Minic">
+	<meta name="keywords" content="blog, coding, development, web, technology, IT, WCF, CORS, cross origin, extension, WCF behavior">
+	<meta name="author" content="Zeljko Minic">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="DocPad v6.79.4" />
+	<link href='http://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
+    <link  rel="stylesheet" href="/styles/bootstrap.min.css" /><link  rel="stylesheet" href="/styles/bootstrap-theme.min.css" /><link  rel="stylesheet" href="/styles/prism.css" /><link  rel="stylesheet" href="/styles/style.css" />
+</head>
+<body>
+
+	<div class="col-md-2 col-xs-0"></div>
+	<div class="col-md-8 col-xs-12">
+
+		<nav class="navbar navbar-default">
+		<div class="container-fluid">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="/index.html">
+				<span>&lt;</span>
+				<span>
+					the<strong>realm</strong>of<strong>code</strong>
+				</span>
+				<span>/&gt;</span>
+			</a>
+			</div>
+
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">	
+				
+					<li class="">
+						<a href="/index.html">
+							Home
+						</a>
+					</li>
+				
+					<li class="">
+						<a href="/about.html">
+							About
+						</a>
+					</li>
+				
+					<li class="">
+						<a href="/archive.html">
+							Archive
+						</a>
+					</li>
+				
+			</ul>
+
+			<ul class="nav navbar-nav navbar-right">
+				<li>
+					<a href="https://twitter.com/zeljko_minic" target="_blank" title="Twitter">
+						<img src="/images/twitter.png" />
+					</a>
+				</li>
+				<li>
+					<a href="http://rs.linkedin.com/in/zminic" target="_blank" title="LinkedIn">
+						<img src="/images/linkedin.png" />
+					</a>
+				</li>
+			</ul>
+			</div><!-- /.navbar-collapse -->
+		</div><!-- /.container-fluid -->
+		</nav>
+
+
+		<div class="content">
+			<div class="post">
+
+	<div class="title">
+		<h1>Adding CORS support to WCF</h1>
+	</div>
+	
+	<div class="body">
+		<p><img class="img-responsive" src="/images/posts/cors.png" title="CORS" align="left" /></p>
+<p>Because of the <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy">same origin policy</a> javascript from one domain can access resource on another domain only through GET request. Usually when we communicate with services we need to use verbs other than GET and sometimes we need to set custom HTTP headers. <a href="http://en.wikipedia.org/wiki/Cross-origin_resource_sharing">Cross origin resource sharing</a> is a mechanism to mitigate this limitation by setting correct headers to allow interaction.</p>
+<p>Basically when javascript tries to communicate with different domain browser will expect server to return appropriate CORS headers or response will not be processed. Also browsers that support CORS will insert &quot;preflight&quot; request before actual request to determine if script has permission to perform action. Preflight request uses OPTIONS verb, defines &quot;Origin&quot; header and does not have body. Server is expected to respond to this request with HTTP response (code 200) with CORS headers and also without any body.</p>
+<p>The problem with WCF service is that it doesn&#39;t know what to do with preflight request. It is not configured to allow OPTIONS verb and also it doesn&#39;t know what headers to send. In this article I will explain how to create WCF behavior which will add support for CORS to the WCF service.</p>
+<h2 id="configuration">Configuration</h2>
+<p>First we need a place to store allowed domains with configurations. In this article I will use custom .NET configuration section to do so, but behavior will work with any store (database, plaintext file, etc.). This is what final configuration looks like:</p>
+<pre><code class="lang-markup">&lt;CorsSupport&gt;
+    &lt;Domain 
+        Name=&quot;http://somedomain&quot; 
+        AllowMethods=&quot;POST&quot; 
+        AllowHeaders=&quot;Content-Type&quot; 
+        AllowCredentials=&quot;true&quot;&gt;
+    &lt;/Domain&gt;
+    &lt;Domain 
+        Name=&quot;http://anotherdomain&quot; 
+        AllowMethods=&quot;POST, PUT&quot; 
+        AllowHeaders=&quot;Content-Type&quot; 
+        AllowCredentials=&quot;true&quot;&gt;
+    &lt;/Domain&gt;
+&lt;/CorsSupport&gt;
+</code></pre>
+<p>Next I will create an endpoint behavior and attach to it message inspector that will enable CORS support:</p>
+<h2 id="endpoint-behavior-to-enable-cors-support">Endpoint behavior to enable CORS support</h2>
+<pre><code class="lang-csharp">public class EnableCorsSupportBehavior: IEndpointBehavior
+    {
+        public void Validate(ServiceEndpoint endpoint)
+        {
+
+        }
+
+        public void AddBindingParameters(ServiceEndpoint endpoint, 
+            BindingParameterCollection bindingParameters)
+        {
+
+        }
+
+        public void ApplyDispatchBehavior(ServiceEndpoint endpoint, 
+            EndpointDispatcher endpointDispatcher)
+        {
+            endpointDispatcher.DispatchRuntime.MessageInspectors.Add(
+                new CorsEnablingMessageInspector());
+        }
+
+        public void ApplyClientBehavior(ServiceEndpoint endpoint, 
+            ClientRuntime clientRuntime)
+        {
+
+        }
+    }
+
+    public class CorsEnablingMessageInspector : IDispatchMessageInspector
+    {
+        public object AfterReceiveRequest(ref Message request, 
+            IClientChannel channel, InstanceContext instanceContext)
+        {
+            var httpRequest = (HttpRequestMessageProperty)request
+                .Properties[HttpRequestMessageProperty.Name];
+
+            return new
+            {
+                origin = httpRequest.Headers[&quot;Origin&quot;],
+                handlePreflight = httpRequest.Method.Equals(&quot;OPTIONS&quot;, 
+                    StringComparison.InvariantCultureIgnoreCase)
+            };
+        }
+
+        public void BeforeSendReply(ref Message reply, object correlationState)
+        {
+            var state = (dynamic)correlationState;
+
+            var config = ConfigurationManager.GetSection(&quot;customSettings&quot;) as CustomSettings;
+
+            if (config == null)
+                throw new InvalidOperationException(&quot;Missing CORS configuration&quot;);
+
+            var domain = config.CorsSupport.OfType&lt;CorsDomain&gt;()
+                .FirstOrDefault(d =&gt; d.Name == state.origin);
+
+            if (domain != null)
+            {
+                // handle request preflight
+                if (state.handlePreflight)
+                {
+                    reply = Message.CreateMessage(MessageVersion.None, &quot;PreflightReturn&quot;);
+
+                    var httpResponse = new HttpResponseMessageProperty();
+                    reply.Properties.Add(HttpResponseMessageProperty.Name, httpResponse);
+
+                    httpResponse.SuppressEntityBody = true;
+                    httpResponse.StatusCode = HttpStatusCode.OK;
+                }
+
+                // add allowed origin info
+                var response = (HttpResponseMessageProperty)reply
+                    .Properties[HttpResponseMessageProperty.Name];
+                response.Headers.Add(&quot;Access-Control-Allow-Origin&quot;, domain.Name);
+
+                if (!string.IsNullOrEmpty(domain.AllowMethods))
+                    response.Headers.Add(&quot;Access-Control-Allow-Methods&quot;, domain.AllowMethods);
+
+                if (!string.IsNullOrEmpty(domain.AllowHeaders))
+                    response.Headers.Add(&quot;Access-Control-Allow-Headers&quot;, domain.AllowHeaders);
+
+                if (domain.AllowCredentials)
+                    response.Headers.Add(&quot;Access-Control-Allow-Credentials&quot;, &quot;true&quot;);
+            }
+        }
+    }
+</code></pre>
+<p>The idea behind this implementation is to hook up to every request made to the WCF service, and to inspect its headers. If the verb invoked is &quot;OPTIONS&quot; then we know that this is a preflight request and we completely change server response to comply to the expected response for preflight. If request is not preflight then we read configuration and set appropriate headers if we have origin match.</p>
+<h2 id="source-code">Source code</h2>
+<p>The complete source code with service and tests can be found at my <a href="https://github.com/zminic/wcf-cors-support">github repository</a>.</p>
+<h2 id="summary">Summary</h2>
+<p>In this article I briefly explained the problem that arises when someone tries to invoke WCF service from javascript served on a different domain. The solution I propose leverages WCF extension point that inspects incoming and outgoing messages and modifies response appropriately to support CORS. In this article I included the gist of solution, for any details regarding to service bindings, endpoints and other configuration please check source code.</p>
+
+	</div>
+	
+	<div class="comments">
+		<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+			var disqus_shortname = 'therealmofcode'; // required: replace example with your forum shortname
+
+			/* * * DON'T EDIT BELOW THIS LINE * * */
+			(function() {
+				var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+				dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+				(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+			})();
+		</script>
+	</div>
+	
+</div>
+		</div>
+	</div>
+	<div class="col-md-2 col-xs-0"></div>
+	
+    <script defer="defer"  src="/scripts/jquery.min.js"></script><script defer="defer"  src="/scripts/bootstrap.min.js"></script><script defer="defer"  src="/scripts/prism.js"></script><script defer="defer"  src="/scripts/google-analytics.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url> <loc>https://zminic.github.io/posts/2012/09/dependency-inversion-principle-dependency-injection.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2012/09/managing-cross-cutting-concerns-using-decorator-desing-pattern.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2012/11/six-tips-for-faster-advancement-in-it-developer-perspective.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2012/11/building-minesweeper-game-using-javascript-html-css.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2012/11/functional-inheritance-javascript.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2013/01/working-with-collections-in-javascript-like-boss.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2014/03/creating-fiddler-extension-custom-filtering.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2014/03/where-is-keypress-event-chrome-android.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2014/03/aspnet-mvc-bundling-minification-requirejs.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2015/05/wcf-proxy-and-inversion-of-control.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2015/05/wcf-enabling-cors.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2015/05/aspnet-mvc-html5-history.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/index.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/games/minesweeper/minesweeper.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/2/index.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/archive.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2016/02/wcf-reverse-invoke-tunnel.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/about.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/posts/2019/07/learning-react.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+<url> <loc>https://zminic.github.io/games/minesweeper-react/index.html</loc> <changefreq>weekly</changefreq> <priority>0.5</priority> </url>
+</urlset>
